@@ -1,0 +1,318 @@
+{
+  "_comment": "Codigo anadido por Felipe Denis - Fuente Data-Driven canonica del Plan de 21 Dias (785 min totales).",
+  "programId": "anti_procrastination_21d",
+  "title": "HabitFlow 21-Day Anti-Procrastination Sprint",
+  "version": "1.0",
+  "totalTargetMinutes": 785,
+  "phases": [
+    {
+      "phaseId": 1,
+      "name": "Fase 1: Romper la Inercia",
+      "daysRange": "Dias 1 al 7",
+      "targetFocusMinutes": 115,
+      "days": [
+        {
+          "day": 1,
+          "focusMinutes": 5,
+          "rule": "Regla de los 5 minutos: Trabajar solo 5 min. Permiso explicito de parar al sonar la alarma.",
+          "successCriteria": "Completar 5 min sin abrir otra app o pestana.",
+          "blocks": [{ "type": "focus", "duration": 5 }],
+          "constraints": ["No tab switching"],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": null
+        },
+        {
+          "day": 2,
+          "focusMinutes": 10,
+          "rule": "Inicio puntual: Empezar dentro de los 10 min posteriores a la hora fijada.",
+          "successCriteria": "Iniciar en ventana de 10 min y cumplir 10 min.",
+          "blocks": [{ "type": "focus", "duration": 10 }],
+          "constraints": ["Punctuality window <= 10m"],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": null
+        },
+        {
+          "day": 3,
+          "focusMinutes": 10,
+          "rule": "Micro-objetivo escrito: Escribir en 1 linea que se hara antes de iniciar.",
+          "successCriteria": "Guardar linea escrita y cumplir 10 min.",
+          "blocks": [{ "type": "focus", "duration": 10 }],
+          "constraints": [],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": { "type": "text_input", "prompt": "Que haras en estos 10 minutos?" }
+        },
+        {
+          "day": 4,
+          "focusMinutes": 15,
+          "rule": "Cero pausas internas: Prohibido levantarse o revisar mensajes durante el bloque.",
+          "successCriteria": "15 min continuos sin interrupciones.",
+          "blocks": [{ "type": "focus", "duration": 15 }],
+          "constraints": ["Zero pauses"],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": null
+        },
+        {
+          "day": 5,
+          "focusMinutes": 15,
+          "rule": "Regla de los 2 minutos: Preparar entorno en menos de 2 min sin pensar.",
+          "successCriteria": "Cumplir preparacion inmediata + 15 min de enfoque.",
+          "blocks": [{ "type": "focus", "duration": 15 }],
+          "constraints": [],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": null
+        },
+        {
+          "day": 6,
+          "focusMinutes": 30,
+          "rule": "Primer descanso controlado: Prohibido usar redes o videos cortos en la pausa.",
+          "successCriteria": "Completar ambos bloques de 15 min.",
+          "blocks": [
+            { "type": "focus", "duration": 15 },
+            { "type": "break", "duration": 5 },
+            { "type": "focus", "duration": 15 }
+          ],
+          "constraints": ["No social media during break"],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": null
+        },
+        {
+          "day": 7,
+          "focusMinutes": 30,
+          "rule": "Auditoria Semanal 1: Registrar el principal distractor de la semana al terminar.",
+          "successCriteria": "Completar bloques + responder auditoria escrita.",
+          "blocks": [
+            { "type": "focus", "duration": 15 },
+            { "type": "break", "duration": 5 },
+            { "type": "focus", "duration": 15 }
+          ],
+          "constraints": [],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": { "type": "audit_text", "prompt": "Cual fue tu principal distractor esta semana?" }
+        }
+      ]
+    },
+    {
+      "phaseId": 2,
+      "name": "Fase 2: Construir Resistencia",
+      "daysRange": "Dias 8 al 14",
+      "targetFocusMinutes": 295,
+      "days": [
+        {
+          "day": 8,
+          "focusMinutes": 25,
+          "rule": "Estacionamiento de impulsos: Anotar cualquier pendiente ajeno en papel y continuar.",
+          "successCriteria": "25 min sin cambiar de actividad.",
+          "blocks": [
+            { "type": "focus", "duration": 25 },
+            { "type": "break", "duration": 5 }
+          ],
+          "constraints": ["Externalize thoughts"],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": null
+        },
+        {
+          "day": 9,
+          "focusMinutes": 25,
+          "rule": "Tolerancia cero al retraso: Margen maximo de 5 min para iniciar segun la hora fijada.",
+          "successCriteria": "Iniciar en ventana de 5 min + cumplir 25 min.",
+          "blocks": [
+            { "type": "focus", "duration": 25 },
+            { "type": "break", "duration": 5 }
+          ],
+          "constraints": ["Punctuality window <= 5m"],
+          "punctualityWindowMinutes": 5,
+          "specialEvent": null
+        },
+        {
+          "day": 10,
+          "focusMinutes": 40,
+          "rule": "Segundo impulso: Continuar 15 min extra tras el descanso para entrenar resistencia.",
+          "successCriteria": "Completar los 40 min efectivos.",
+          "blocks": [
+            { "type": "focus", "duration": 25 },
+            { "type": "break", "duration": 5 },
+            { "type": "focus", "duration": 15 }
+          ],
+          "constraints": [],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": null
+        },
+        {
+          "day": 11,
+          "focusMinutes": 50,
+          "rule": "Bloqueo total de notificaciones: Silenciar todo dispositivo durante la sesion.",
+          "successCriteria": "Completar 2 ciclos de 25 min sin alertas.",
+          "blocks": [
+            { "type": "focus", "duration": 25 },
+            { "type": "break", "duration": 5 },
+            { "type": "focus", "duration": 25 }
+          ],
+          "constraints": ["Strict DND"],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": null
+        },
+        {
+          "day": 12,
+          "focusMinutes": 50,
+          "rule": "Sin multitarea: Solo 1 ventana o herramienta activa en pantalla durante el bloque.",
+          "successCriteria": "Completar 50 min en una sola ventana.",
+          "blocks": [
+            { "type": "focus", "duration": 25 },
+            { "type": "break", "duration": 5 },
+            { "type": "focus", "duration": 25 }
+          ],
+          "constraints": ["Single window active"],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": null
+        },
+        {
+          "day": 13,
+          "focusMinutes": 55,
+          "rule": "Extension de umbral: Primer bloque extendido a 35 min continuos antes del descanso.",
+          "successCriteria": "Superar el bloque largo de 35 min.",
+          "blocks": [
+            { "type": "focus", "duration": 35 },
+            { "type": "break", "duration": 7 },
+            { "type": "focus", "duration": 20 }
+          ],
+          "constraints": [],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": null
+        },
+        {
+          "day": 14,
+          "focusMinutes": 50,
+          "rule": "Auditoria Semanal 2: Calificar del 1 al 5 la dificultad de inicio vs el Dia 1.",
+          "successCriteria": "Completar 50 min + registrar calificacion 1-5.",
+          "blocks": [
+            { "type": "focus", "duration": 25 },
+            { "type": "break", "duration": 5 },
+            { "type": "focus", "duration": 25 }
+          ],
+          "constraints": [],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": { "type": "rating_1_5", "prompt": "Dificultad de inicio vs Dia 1 (1: Muy facil, 5: Muy dificil)" }
+        }
+      ]
+    },
+    {
+      "phaseId": 3,
+      "name": "Fase 3: Consolidacion y Autonomia",
+      "daysRange": "Dias 15 al 21",
+      "targetFocusMinutes": 375,
+      "days": [
+        {
+          "day": 15,
+          "focusMinutes": 40,
+          "rule": "Inmersion profunda: Un solo bloque largo de 40 min sin pausas intermedias.",
+          "successCriteria": "Completar 40 min ininterrumpidos.",
+          "blocks": [
+            { "type": "focus", "duration": 40 },
+            { "type": "break", "duration": 10 }
+          ],
+          "constraints": ["Continuous deep focus"],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": null
+        },
+        {
+          "day": 16,
+          "focusMinutes": 40,
+          "rule": "Lo mas dificil primero: Dedicar los primeros 15 min exclusivamente a la parte mas compleja.",
+          "successCriteria": "Empezar por el sub-paso mas dificil.",
+          "blocks": [
+            { "type": "focus", "duration": 40 },
+            { "type": "break", "duration": 10 }
+          ],
+          "constraints": ["Hardest task first 15m"],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": null
+        },
+        {
+          "day": 17,
+          "focusMinutes": 70,
+          "rule": "Pico de volumen: Dia de mayor exigencia del plan (2 bloques de 35 min).",
+          "successCriteria": "Completar los 70 min efectivos.",
+          "blocks": [
+            { "type": "focus", "duration": 35 },
+            { "type": "break", "duration": 7 },
+            { "type": "focus", "duration": 35 }
+          ],
+          "constraints": ["Peak volume"],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": null
+        },
+        {
+          "day": 18,
+          "focusMinutes": 45,
+          "rule": "Recuperacion activa: Un bloque solido de 45 min aplicando lo mas dificil primero.",
+          "successCriteria": "Completar 45 min sin interrupciones.",
+          "blocks": [
+            { "type": "focus", "duration": 45 },
+            { "type": "break", "duration": 10 }
+          ],
+          "constraints": [],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": null
+        },
+        {
+          "day": 19,
+          "focusMinutes": 80,
+          "rule": "Simulacion de jornada real: Dos sesiones profundas de 40 min con descanso estructurado.",
+          "successCriteria": "Completar ambos bloques de 40 min.",
+          "blocks": [
+            { "type": "focus", "duration": 40 },
+            { "type": "break", "duration": 10 },
+            { "type": "focus", "duration": 40 }
+          ],
+          "constraints": [],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": null
+        },
+        {
+          "day": 20,
+          "focusMinutes": 50,
+          "rule": "Autonomia guiada: Elegir formato antes de iniciar (1x50/10 o 2x25/5).",
+          "successCriteria": "Seleccionar formato y completarlo.",
+          "blocks": [],
+          "constraints": ["User custom choice"],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": {
+            "type": "format_selector",
+            "options": [
+              {
+                "id": "format_1x50",
+                "label": "1 bloque de 50m + 10m descanso",
+                "blocks": [
+                  { "type": "focus", "duration": 50 },
+                  { "type": "break", "duration": 10 }
+                ]
+              },
+              {
+                "id": "format_2x25",
+                "label": "2 bloques de 25m + 5m descanso",
+                "blocks": [
+                  { "type": "focus", "duration": 25 },
+                  { "type": "break", "duration": 5 },
+                  { "type": "focus", "duration": 25 }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "day": 21,
+          "focusMinutes": 50,
+          "rule": "Prueba Final y Cierre: Ejecutar el bloque estandar (50/10) y desbloquear veredicto.",
+          "successCriteria": "Completar 50 min + generar reporte final.",
+          "blocks": [
+            { "type": "focus", "duration": 50 },
+            { "type": "break", "duration": 10 }
+          ],
+          "constraints": ["Final evaluation trigger"],
+          "punctualityWindowMinutes": 10,
+          "specialEvent": null
+        }
+      ]
+    }
+  ]
+}

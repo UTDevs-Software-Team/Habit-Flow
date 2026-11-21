@@ -1,0 +1,13 @@
+# Codigo anadido por Felipe Denis
+# Reglas de exclusion Git para HabitFlow Android.
+
+.gradle/
+.kotlin/
+build/
+app/build/
+local.properties
+*.iml
+.idea/
+captures/
+.cxx/
+*firebase-adminsdk*.json

@@ -1,0 +1,56 @@
+// Codigo anadido por Felipe Denis
+// Reglas de seguridad de Cloud Firestore para habit-flow-fb095 (Multi-Meta + Perfil Dopamina).
+// Aisla toda lectura y escritura estrictamente al propietario autenticado (users/{uid}).
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId)
+        && request.resource.data.uid == userId;
+      allow delete: if isOwner(userId);
+
+      // Subcolecciones de metas independientes (max 3 activas controladas en cliente)
+      match /goals/{goalId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && request.resource.data.currentDay is int
+          && request.resource.data.currentDay >= 1
+          && request.resource.data.currentDay <= 21;
+        allow delete: if isOwner(userId);
+
+        match /dailyLogs/{dayId} {
+          allow read, write: if isOwner(userId);
+        }
+
+        match /maintenanceSessions/{sessionId} {
+          allow read, write: if isOwner(userId);
+        }
+
+        match /sprintHistory/{cycleId} {
+          allow read, write: if isOwner(userId);
+        }
+      }
+
+      // Retrocompatibilidad temporal con migracion desde raiz users/{uid}
+      match /dailyLogs/{dayId} {
+        allow read, write: if isOwner(userId);
+      }
+      match /maintenanceSessions/{sessionId} {
+        allow read, write: if isOwner(userId);
+      }
+      match /sprintHistory/{cycleId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

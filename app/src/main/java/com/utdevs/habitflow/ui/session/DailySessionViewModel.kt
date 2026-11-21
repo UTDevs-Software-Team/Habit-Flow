@@ -1,0 +1,351 @@
+/**
+ * Codigo anadido por Felipe Denis
+ *
+ * ViewModel Black Box para DailySessionScreen por goalId.
+ * Integra FocusTimerService, haptica corta por puntos XP, vibracion larga + confeti al subir nivel,
+ * y ahorro atomico de recompensas RPE/Fenix en GoalsRepository.
+ */
+package com.utdevs.habitflow.ui.session
+
+import android.content.Context
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.utdevs.habitflow.data.feedback.HapticAndToneController
+import com.utdevs.habitflow.data.theme.ThemePreferences
+import com.utdevs.habitflow.domain.dopamine.ComputeDayRewardUseCase
+import com.utdevs.habitflow.domain.model.BlockType
+import com.utdevs.habitflow.domain.model.DailyCheckState
+import com.utdevs.habitflow.domain.model.DailyLogEntry
+import com.utdevs.habitflow.domain.model.DayPlanSpec
+import com.utdevs.habitflow.domain.model.DayRewardOutcome
+import com.utdevs.habitflow.domain.model.GoalSprint
+import com.utdevs.habitflow.domain.model.SessionBlock
+import com.utdevs.habitflow.domain.model.SpecialEvent
+import com.utdevs.habitflow.domain.model.UserProfile
+import com.utdevs.habitflow.domain.repository.DopamineCatalogSource
+import com.utdevs.habitflow.domain.repository.GoalsRepository
+import com.utdevs.habitflow.domain.repository.PlanDataSource
+import com.utdevs.habitflow.domain.usecase.ComputeDayBlocksUseCase
+import com.utdevs.habitflow.domain.usecase.EvaluatePunctualityUseCase
+import com.utdevs.habitflow.service.FocusTimerService
+import com.utdevs.habitflow.service.TimerStateHolder
+import com.utdevs.habitflow.service.TimerStatus
+import com.utdevs.habitflow.service.TimerUiState
+import java.time.Instant
+import java.time.LocalTime
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+data class DailySessionUiState(
+    val daySpec: DayPlanSpec,
+    val goal: GoalSprint = GoalSprint(),
+    val profile: UserProfile = UserProfile(),
+    val resolvedBlocks: List<SessionBlock> = emptyList(),
+    val checkPrep: Boolean = false,
+    val checkExecution: Boolean = false,
+    val closureTask: String = "",
+    val specialInputValue: String = "",
+    val selectedFormatId: String? = null,
+    val startTimeIso: String? = null,
+    val isPunctual: Boolean = false,
+    val showIgnition: Boolean = false,
+    val showConfetti: Boolean = false,
+    val victoryOutcome: DayRewardOutcome? = null,
+    val liveXpMessage: String? = null,
+    val isSaving: Boolean = false,
+    val errorMessage: String? = null
+) {
+    val checkClosure: Boolean
+        get() = closureTask.trim().isNotEmpty()
+
+    val isSpecialEventValid: Boolean
+        get() = when (daySpec.specialEvent) {
+            null -> true
+            is SpecialEvent.TextInput -> specialInputValue.trim().isNotEmpty()
+            is SpecialEvent.AuditText -> specialInputValue.trim().isNotEmpty()
+            is SpecialEvent.Rating1To5 -> specialInputValue in setOf("1", "2", "3", "4", "5")
+            is SpecialEvent.FormatSelector -> selectedFormatId != null
+        }
+
+    val canFinalizeDay: Boolean
+        get() = checkPrep && checkExecution && checkClosure && isSpecialEventValid && !isSaving
+}
+
+class DailySessionViewModel(
+    private val uid: String,
+    private val goalId: String,
+    private val dayNumber: Int,
+    private val goalsRepository: GoalsRepository,
+    private val planDataSource: PlanDataSource,
+    private val dopamineCatalogSource: DopamineCatalogSource,
+    private val computeDayBlocksUseCase: ComputeDayBlocksUseCase,
+    private val evaluatePunctualityUseCase: EvaluatePunctualityUseCase,
+    private val computeDayRewardUseCase: ComputeDayRewardUseCase,
+    private val timerStateHolder: TimerStateHolder,
+    private val hapticController: HapticAndToneController,
+    private val themePreferences: ThemePreferences
+) : ViewModel() {
+
+    private val daySpec = planDataSource.getDaySpec(dayNumber)
+    val sessionTag = "goal_${goalId}_day_$dayNumber"
+    private var midBlockNotifiedIndex: Int = -1
+
+    private val _uiState = MutableStateFlow(
+        DailySessionUiState(
+            daySpec = daySpec,
+            resolvedBlocks = computeDayBlocksUseCase(daySpec, durationFactor = 1.0)
+        )
+    )
+    val uiState: StateFlow<DailySessionUiState> = _uiState.asStateFlow()
+    val timerState: StateFlow<TimerUiState> = timerStateHolder.state
+
+    init {
+        viewModelScope.launch {
+            timerStateHolder.state.collect { tState ->
+                if (tState.sessionTag != sessionTag) return@collect
+
+                if (tState.status == TimerStatus.RUNNING &&
+                    tState.currentBlock?.type == BlockType.FOCUS &&
+                    tState.totalBlockMillis > 0L &&
+                    tState.remainingMillis <= tState.totalBlockMillis / 2L &&
+                    midBlockNotifiedIndex != tState.currentBlockIndex
+                ) {
+                    midBlockNotifiedIndex = tState.currentBlockIndex
+                    val midMsg = dopamineCatalogSource.getCatalog().messages.onMidBlock.randomOrNull()
+                        ?: "Mitad del bloque superada. Manten el foco y continua."
+                    _uiState.update { it.copy(liveXpMessage = midMsg) }
+                }
+
+                if (tState.status == TimerStatus.FINISHED) {
+                    if (!_uiState.value.checkExecution) {
+                        hapticController.triggerPointsGainHaptic(themePreferences.settings.value.hapticsEnabled)
+                    }
+                    _uiState.update {
+                        it.copy(
+                            checkExecution = true,
+                            liveXpMessage = "Bloque terminado a 00:00. Completa el cierre para reclamar tu XP."
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun bindState(goal: GoalSprint, profile: UserProfile) {
+        val currentFormat = _uiState.value.selectedFormatId
+        val blocks = computeDayBlocksUseCase(daySpec, goal.sprint.durationFactor, currentFormat)
+        _uiState.update {
+            it.copy(goal = goal, profile = profile, resolvedBlocks = blocks)
+        }
+    }
+
+    fun onTogglePrep(checked: Boolean) {
+        if (checked && !_uiState.value.checkPrep) {
+            hapticController.triggerPointsGainHaptic(themePreferences.settings.value.hapticsEnabled)
+            val prepXp = dopamineCatalogSource.getCatalog().xpRules.prepCheckXp
+            _uiState.update {
+                it.copy(
+                    checkPrep = true,
+                    liveXpMessage = "+$prepXp XP asegurados por preparar tu entorno."
+                )
+            }
+        } else {
+            _uiState.update { it.copy(checkPrep = checked) }
+        }
+    }
+
+    fun onClosureTaskChange(text: String) {
+        _uiState.update { it.copy(closureTask = text) }
+    }
+
+    fun onSpecialInputChange(text: String) {
+        _uiState.update { it.copy(specialInputValue = text) }
+    }
+
+    fun onSelectFormat(formatId: String) {
+        val blocks = computeDayBlocksUseCase(
+            daySpec = daySpec,
+            durationFactor = _uiState.value.goal.sprint.durationFactor,
+            selectedFormatId = formatId
+        )
+        _uiState.update { it.copy(selectedFormatId = formatId, resolvedBlocks = blocks) }
+    }
+
+    fun requestStartOrResume(context: Context) {
+        val tState = timerStateHolder.state.value
+        val current = _uiState.value
+
+        if (daySpec.specialEvent is SpecialEvent.FormatSelector && current.selectedFormatId == null) {
+            _uiState.update { it.copy(errorMessage = "Selecciona un formato (1x50 o 2x25) antes de iniciar.") }
+            return
+        }
+        if (daySpec.specialEvent is SpecialEvent.TextInput && current.specialInputValue.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "Escribe tu micro-objetivo previo antes de iniciar.") }
+            return
+        }
+
+        if (tState.sessionTag == sessionTag && tState.status == TimerStatus.PAUSED) {
+            FocusTimerService.sendAction(context, FocusTimerService.ACTION_RESUME)
+        } else {
+            _uiState.update { it.copy(showIgnition = true, errorMessage = null) }
+        }
+    }
+
+    fun onIgnitionFinished(context: Context) {
+        val current = _uiState.value
+        if (current.startTimeIso == null) {
+            val punctual = evaluatePunctualityUseCase(
+                triggerTimeHHmm = current.goal.sprint.triggerTime,
+                actualStartTime = LocalTime.now(),
+                windowMinutes = daySpec.punctualityWindowMinutes
+            )
+            val catalog = dopamineCatalogSource.getCatalog()
+            val msg = if (punctual) {
+                hapticController.triggerPointsGainHaptic(themePreferences.settings.value.hapticsEnabled)
+                "+${catalog.xpRules.punctualStartXp} XP bono de arranque puntual activado."
+            } else {
+                "Sesion iniciada. Manten el enfoque hasta 00:00."
+            }
+            _uiState.update {
+                it.copy(
+                    showIgnition = false,
+                    startTimeIso = Instant.now().toString(),
+                    isPunctual = punctual,
+                    liveXpMessage = msg
+                )
+            }
+        } else {
+            _uiState.update { it.copy(showIgnition = false) }
+        }
+        FocusTimerService.startSession(context, sessionTag, current.resolvedBlocks)
+    }
+
+    fun pauseTimer(context: Context) {
+        FocusTimerService.sendAction(context, FocusTimerService.ACTION_PAUSE)
+    }
+
+    fun skipBlockTo5s(context: Context) {
+        FocusTimerService.sendAction(context, FocusTimerService.ACTION_SKIP_TO_5S)
+    }
+
+    fun finalizeDay(context: Context) {
+        val current = _uiState.value
+        if (!current.canFinalizeDay) return
+
+        val focusMinutes = current.resolvedBlocks
+            .filter { it.type == BlockType.FOCUS }
+            .sumOf { it.durationMinutes }
+
+        val log = DailyLogEntry(
+            day = dayNumber,
+            completed = true,
+            missed = false,
+            startTimeIso = current.startTimeIso ?: Instant.now().toString(),
+            completedAtIso = Instant.now().toString(),
+            punctual = current.isPunctual,
+            effectiveFocusMinutes = focusMinutes,
+            checks = DailyCheckState(
+                checkPrep = current.checkPrep,
+                checkExecution = current.checkExecution,
+                checkClosure = current.checkClosure
+            ),
+            closureTask = current.closureTask.trim(),
+            specialInput = current.specialInputValue.takeIf { it.isNotBlank() },
+            selectedFormatId = current.selectedFormatId
+        )
+
+        val newGoalStreak = current.goal.goalStreak + 1
+        val newGlobalStreak = current.profile.globalStreak + 1
+        val catalog = dopamineCatalogSource.getCatalog()
+        val outcome = computeDayRewardUseCase(
+            catalog = catalog,
+            profile = current.profile,
+            goalBeforeDay = current.goal,
+            completedLog = log,
+            newGoalStreak = newGoalStreak
+        )
+        val updatedShields = if (outcome.shieldEarned) {
+            (current.profile.streakShields + 1).coerceAtMost(catalog.xpRules.maxShields)
+        } else {
+            current.profile.streakShields
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true, errorMessage = null) }
+            goalsRepository.saveCompletedDayWithReward(
+                uid = uid,
+                goalId = goalId,
+                log = log,
+                nextDay = (dayNumber + 1).coerceAtMost(21),
+                reward = outcome,
+                newGlobalStreak = newGlobalStreak,
+                newBestStreak = maxOf(current.profile.bestStreak, newGlobalStreak),
+                newGoalStreak = newGoalStreak,
+                newShields = updatedShields
+            ).onSuccess {
+                FocusTimerService.sendAction(context, FocusTimerService.ACTION_STOP)
+                val appearance = themePreferences.settings.value
+                if (outcome.leveledUp) {
+                    hapticController.triggerLevelUpCelebration(
+                        soundEnabled = appearance.soundEnabled,
+                        hapticsEnabled = appearance.hapticsEnabled
+                    )
+                } else {
+                    hapticController.triggerPointsGainHaptic(appearance.hapticsEnabled)
+                }
+                _uiState.update {
+                    it.copy(
+                        isSaving = false,
+                        showConfetti = outcome.leveledUp,
+                        victoryOutcome = outcome
+                    )
+                }
+            }.onFailure { err ->
+                _uiState.update {
+                    it.copy(isSaving = false, errorMessage = err.message ?: "Error al guardar el dia.")
+                }
+            }
+        }
+    }
+
+    fun dismissVictoryDialog(onComplete: (isDay21: Boolean) -> Unit) {
+        _uiState.update { it.copy(victoryOutcome = null, showConfetti = false) }
+        onComplete(dayNumber == 21)
+    }
+
+    class Factory(
+        private val uid: String,
+        private val goalId: String,
+        private val dayNumber: Int,
+        private val goalsRepository: GoalsRepository,
+        private val planDataSource: PlanDataSource,
+        private val dopamineCatalogSource: DopamineCatalogSource,
+        private val computeDayBlocksUseCase: ComputeDayBlocksUseCase,
+        private val evaluatePunctualityUseCase: EvaluatePunctualityUseCase,
+        private val computeDayRewardUseCase: ComputeDayRewardUseCase,
+        private val timerStateHolder: TimerStateHolder,
+        private val hapticController: HapticAndToneController,
+        private val themePreferences: ThemePreferences
+    ) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+            DailySessionViewModel(
+                uid = uid,
+                goalId = goalId,
+                dayNumber = dayNumber,
+                goalsRepository = goalsRepository,
+                planDataSource = planDataSource,
+                dopamineCatalogSource = dopamineCatalogSource,
+                computeDayBlocksUseCase = computeDayBlocksUseCase,
+                evaluatePunctualityUseCase = evaluatePunctualityUseCase,
+                computeDayRewardUseCase = computeDayRewardUseCase,
+                timerStateHolder = timerStateHolder,
+                hapticController = hapticController,
+                themePreferences = themePreferences
+            ) as T
+    }
+}

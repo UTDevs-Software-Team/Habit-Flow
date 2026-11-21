@@ -1,47 +1,25 @@
-# HabitFlow 🚀
+# HabitFlow Android
 
-HabitFlow es una aplicación web interactiva diseñada para ayudar a los usuarios a vencer la procrastinación e iniciar actividades pequeñas mediante un programa estructurado y guiado de **21 días**.
+Codigo anadido por Felipe Denis
 
-## 📋 Características Principales
+Aplicacion nativa Android en **100% Kotlin** con **Jetpack Compose (Material 3)** y backend en **Firebase (`habit-flow-fb095`)** para ejecutar el Sprint de Condicionamiento Progresivo contra la Procrastinacion de **21 Dias** (785 minutos / 13.08 horas de enfoque acumulado).
 
-- **Programa Progresivo de 21 Días**: Estructurado en 3 etapas semanales consecutivas (Aprender a comenzar, Crear rutina de inicio y Consolidar).
-- **Asignación Dinámica por Arrastre**: Lógica inteligente donde los datos ingresados en un día (actividades, micro-pasos, prioridades) alimentan las tareas de los días posteriores.
-- **Desbloqueo Secuencial Estricto**: Sistema de avance progresivo que requiere completar el 100% de las tareas diarias para desbloquear el día siguiente.
-- **Temporizadores Integrados y Secuenciales**: Relojes regresivos dinámicos de 5 a 23 minutos adaptados a cada estrategia diaria (incluyendo bloques de enfoque y descansos).
-- **Visualización de Planta Virtual**: Gamificación del progreso donde una planta evoluciona en 5 etapas a medida que incrementa el porcentaje global acumulado.
-- **Métricas Objetivas**: Registro automático e inmutable de eventos (tiempo de enfoque acumulado, puntualidad de inicio, sesiones terminadas y actividades completadas).
-- **Persistencia Local**: Todos los avances y respuestas se conservan automáticamente en el almacenamiento del navegador (`localStorage`).
+## Arquitectura y Filosofia
 
-## 🛠️ Tecnologías Usadas
+- **Data-Driven:** El plan de 21 dias se carga desde `app/src/main/assets/plans/anti_procrastination_21d.json` a traves del contrato `PlanDataSource`.
+- **Black Box y Modularidad Absoluta:**
+  - `domain/` (modelos, casos de uso puros e interfaces sin dependencias de Android o Firebase).
+  - `data/` (mappers, `AssetPlanDataSource`, `FirebaseAuthRepository`, `FirestoreSprintRepository`).
+  - `service/` (`FocusTimerService` con `SystemClock.elapsedRealtime()` y `TimerStateHolder`).
+  - `ui/` (nodos visuales en Jetpack Compose desacoplados que invocan exclusivamente ViewModels).
+- **Aislamiento en Cloud Firestore:** Todos los datos se almacenan bajo `users/{uid}/` (`dailyLogs`, `maintenanceSessions`, `sprintHistory`), protegidos por `firestore.rules`.
 
-- **Frontend**: HTML5, CSS3 / Tailwind CSS, JavaScript (ES6+) o React
-- **Almacenamiento**: LocalStorage API
-- **Diseño**: Interfaz responsiva y accesible para escritorio y dispositivos móviles
+## Requisitos de Configuracion
 
-## 📂 Estructura del Repositorio
-
-```
-habitflow/
-├── index.html            # Punto de entrada principal
-├── css/
-│   └── styles.css        # Estilos globales y temas de componentes
-├── js/
-│   ├── app.js            # Inicialización y control de vistas
-│   ├── logic.js          # Lógica de asignación dinámica y reglas de 21 días
-│   ├── timer.js          # Controladores de temporizadores y secuencias
-│   └── storage.js        # Manejo de persistencia en localStorage
-└── README.md             # Documentación del proyecto
-```
-
-## 🚀 Guía Rápida de Uso
-
-1. **Clonar el repositorio**:
-   ```bash
-   git clone https://github.com/usuario/habitflow.git
-   cd habitflow
-   ```
-2. **Ejecutar la aplicación**:
-   Abre el archivo `index.html` en cualquier navegador web moderno o utiliza una extensión de servidor local como *Live Server* en VS Code.
-3. **Iniciar el Programa**:
-   - Selecciona **"Comenzar Día 1"** en el Panel Principal.
-   - Registra tu primera actividad pospuesta para dar inicio a tu Plan de 21 Días.
+1. Abrir el proyecto en Android Studio.
+2. Colocar el archivo `google-services.json` del proyecto Firebase `habit-flow-fb095` (package `com.utdevs.habitflow`) en `app/google-services.json`.
+3. Habilitar **Authentication (Correo/Contrasena)** y **Cloud Firestore** en la consola de Firebase.
+4. Desplegar las reglas de seguridad de `firestore.rules` antes de pasar a produccion.
+5. Compilar y ejecutar pruebas unitarias:
+   - `./gradlew testDebugUnitTest`
+   - `./gradlew assembleDebug`

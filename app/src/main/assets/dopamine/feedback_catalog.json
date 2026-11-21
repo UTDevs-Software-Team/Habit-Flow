@@ -1,0 +1,41 @@
+{
+  "_comment": "Codigo anadido por Felipe Denis - Catalogo Data-Driven de Dopamina (Schultz 2016 RPE, Sirois & Pychyl 2013, Steel 2007 TMT).",
+  "version": "2.0",
+  "xpRules": {
+    "prepCheckXp": 5,
+    "punctualStartXp": 10,
+    "dayCompletionBaseXp": 25,
+    "xpPerFocusMinute": 1,
+    "phoenixRecoveryBonusXp": 20,
+    "surpriseRpeBonusXp": 15,
+    "surpriseRpeChancePercent": 30,
+    "streakDaysPerShield": 5,
+    "maxShields": 2
+  },
+  "ranks": [
+    { "minXp": 0, "title": "Semilla Latente" },
+    { "minXp": 100, "title": "Brote Constante" },
+    { "minXp": 300, "title": "Tallo Firme" },
+    { "minXp": 600, "title": "Copa en Flor" },
+    { "minXp": 1000, "title": "Roble Autonomo" },
+    { "minXp": 1500, "title": "Guardian del Bosque" }
+  ],
+  "messages": {
+    "onPunctualStart": [
+      "Arranque puntual registrado. Superaste la friccion inicial antes que la demora.",
+      "Cero retraso. Tu corteza prefrontal acaba de tomar el control del presente."
+    ],
+    "onMidBlock": [
+      "Mitad del bloque superada. Manten el foco en una sola ventana y continua.",
+      "Inercia vencida. La utilidad de terminar ahora supera cualquier distractor."
+    ],
+    "onRecoveryAfterMiss": [
+      "Efecto Fenix activado: volver sin culpa rompe la espiral de abandono.",
+      "Regaste la planta a tiempo. Retomar hoy vale doble para consolidar el habito."
+    ],
+    "onSurpriseRpe": [
+      "Bono Sorpresa RPE Positivo (+15 XP): tu cerebro acaba de reforzar este circuito.",
+      "Recompensa inesperada desbloqueada (+15 XP) por sostener tu bloque hasta 00:00."
+    ]
+  }
+}

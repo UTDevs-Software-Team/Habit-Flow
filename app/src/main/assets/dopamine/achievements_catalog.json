@@ -1,0 +1,42 @@
+{
+  "_comment": "Codigo anadido por Felipe Denis - Catalogo Data-Driven de Logros Conductuales.",
+  "version": "1.0",
+  "achievements": [
+    {
+      "id": "first_spark",
+      "title": "Primera Chispa",
+      "description": "Completar el Dia 1 (5 min) rompiendo la paralisis inicial.",
+      "bonusXp": 15
+    },
+    {
+      "id": "punctual_sniper",
+      "title": "Precision Quirurgica",
+      "description": "Superar el Dia 9 iniciando dentro de la ventana estricta de 5 min.",
+      "bonusXp": 25
+    },
+    {
+      "id": "phoenix_return",
+      "title": "Efecto Fenix",
+      "description": "Completar una sesion justo despues de un dia omitido sin abandonar el sprint.",
+      "bonusXp": 20
+    },
+    {
+      "id": "week_one_survivor",
+      "title": "Inercia Rota",
+      "description": "Completar los 7 dias de la Fase 1.",
+      "bonusXp": 30
+    },
+    {
+      "id": "deep_diver",
+      "title": "Inmersion Profunda",
+      "description": "Completar el bloque continuo de 40 min del Dia 15.",
+      "bonusXp": 35
+    },
+    {
+      "id": "sprint_master",
+      "title": "Habito Instalado",
+      "description": "Completar el Dia 21 con al menos 80% de cumplimiento.",
+      "bonusXp": 50
+    }
+  ]
+}
