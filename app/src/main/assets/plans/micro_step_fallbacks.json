@@ -1,0 +1,18 @@
+{
+  "_comment": "Codigo anadido por Felipe Denis - Respaldo offline de micro-pasos por duracion.",
+  "short": [
+    "Abre solo el material necesario y trabaja 5 min sin editar nada mas",
+    "Escribe el esquema minimo o primer bloque de tu tarea",
+    "Completa 1 sub-paso verificable y deja anotado donde seguir"
+  ],
+  "medium": [
+    "Divide la tarea en 2 sub-pasos y resuelve solo el primero",
+    "Elimina distracciones y avanza un bloque continuo sin cambiar de ventana",
+    "Termina la parte mas tediosa en los primeros minutos y cierra un entregable"
+  ],
+  "deep": [
+    "Ataca primero el punto mas complejo durante los primeros 15 min",
+    "Sostener inmersion profunda sobre un solo modulo hasta completar",
+    "Cerrar sesion dejando lista la primera micro-accion exacta de manana"
+  ]
+}

@@ -7,12 +7,15 @@ package com.utdevs.habitflow.ui.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -31,7 +34,7 @@ import com.utdevs.habitflow.domain.model.DayZeroParams
 import com.utdevs.habitflow.domain.model.MAX_ACTIVE_GOALS
 import com.utdevs.habitflow.ui.theme.LocalForestColors
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun CreateGoalDialog(
     canActivateMore: Boolean,
@@ -44,8 +47,14 @@ fun CreateGoalDialog(
     var anchorTask by remember { mutableStateOf("") }
     var triggerTime by remember { mutableStateOf("17:00") }
     var triggerLocation by remember { mutableStateOf("") }
-    var blockingRule by remember { mutableStateOf("") }
+    var blockingRule by remember { mutableStateOf("DND automatico + Alerta de salida") }
     var showTimePicker by remember { mutableStateOf(false) }
+
+    val blockingPresets = listOf(
+        "DND automatico + Alerta de salida",
+        "Solo DND automatico",
+        "Modo avion manual"
+    )
 
     val params = DayZeroParams(anchorTask, triggerTime, triggerLocation, blockingRule)
     val isValid = title.isNotBlank() && params.isValid()
@@ -94,11 +103,25 @@ fun CreateGoalDialog(
                     placeholder = { Text("Ej. Escritorio principal") },
                     modifier = Modifier.fillMaxWidth()
                 )
+                Text(
+                    text = "Condicion de bloqueo:",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colors.textSecondary
+                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    blockingPresets.forEach { preset ->
+                        FilterChip(
+                            selected = blockingRule == preset,
+                            onClick = { blockingRule = preset },
+                            label = { Text(preset) }
+                        )
+                    }
+                }
                 OutlinedTextField(
                     value = blockingRule,
                     onValueChange = { blockingRule = it },
                     label = { Text("Regla de bloqueo de distractor") },
-                    placeholder = { Text("Ej. Celular en modo avion") },
+                    placeholder = { Text("Ej. DND automatico + Alerta de salida") },
                     modifier = Modifier.fillMaxWidth()
                 )
             }

@@ -1,7 +1,8 @@
 /**
  * Codigo anadido por Felipe Denis
  *
- * Nodo UI de Sesion Diaria: Regla Operativa, Temporizador Multi-Bloque,
+ * Nodo UI de Sesion Diaria: Regla Operativa, Bloqueo Real DND + Detector Anti-Fuga,
+ * Sugerencias de Micro-Pasos con Gemini 3.8 Flash, Temporizador Multi-Bloque,
  * Bucle de 3 Checks, Ignicion 3-2-1, Confeti de Hojas y Dialogo de Victoria.
  */
 package com.utdevs.habitflow.ui.session
@@ -15,23 +16,30 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.DoNotDisturbOn
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,6 +51,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -52,6 +61,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.utdevs.habitflow.domain.model.BlockType
 import com.utdevs.habitflow.domain.model.GoalSprint
@@ -62,7 +74,7 @@ import com.utdevs.habitflow.ui.components.dopamine.DailyVictoryDialog
 import com.utdevs.habitflow.ui.components.dopamine.IgnitionCountdownOverlay
 import com.utdevs.habitflow.ui.theme.LocalForestColors
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun DailySessionScreen(
     goal: GoalSprint,
@@ -72,6 +84,7 @@ fun DailySessionScreen(
     onDayCompleted: (isDay21: Boolean) -> Unit
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val notifLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = {}
@@ -81,6 +94,18 @@ fun DailySessionScreen(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_STOP -> viewModel.onAppLeftDuringFocus()
+                Lifecycle.Event.ON_RESUME -> viewModel.refreshDndPermission()
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     LaunchedEffect(goal, profile) {
@@ -127,6 +152,36 @@ fun DailySessionScreen(
                             style = MaterialTheme.typography.labelMedium,
                             color = colors.primaryAction
                         )
+                    }
+                }
+
+                // Escudo de Bloqueo Real (DND automatico en Android)
+                if (!state.hasDndPermission) {
+                    Card(
+                        shape = RoundedCornerShape(18.dp),
+                        colors = CardDefaults.cardColors(containerColor = colors.softTealBg),
+                        border = BorderStroke(1.dp, colors.tealSecondary.copy(alpha = 0.3f))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(Icons.Default.DoNotDisturbOn, contentDescription = null, tint = colors.tealSecondary)
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Bloqueo Real No Molestar", style = MaterialTheme.typography.labelMedium, color = colors.textPrimary)
+                                Text(
+                                    "Autoriza DND para silenciar alertas al iniciar Enfoque y restaurarlas al terminar.",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = colors.textSecondary
+                                )
+                            }
+                            OutlinedButton(onClick = { viewModel.openDndSettings(context) }) {
+                                Text("Activar")
+                            }
+                        }
                     }
                 }
 
@@ -261,7 +316,7 @@ fun DailySessionScreen(
                     }
                 }
 
-                // Bucle Diario de 3 Checks
+                // Bucle Diario de 3 Checks + Asistente Gemini 3.8 Flash
                 Card(
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = colors.surfaceCard),
@@ -289,6 +344,36 @@ fun DailySessionScreen(
                             Checkbox(checked = state.checkClosure, onCheckedChange = null, enabled = false)
                             Spacer(modifier = Modifier.width(6.dp))
                             Text("Check 3: Micro-tarea para manana", style = MaterialTheme.typography.bodyMedium, color = colors.textSecondary)
+                        }
+
+                        OutlinedButton(
+                            onClick = { viewModel.requestAiMicroSteps(forTomorrow = true) },
+                            enabled = !state.isGeneratingSteps,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            if (state.isGeneratingSteps) {
+                                CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Generando con Gemini 3.8 Flash...")
+                            } else {
+                                Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Sugerir micro-pasos (Gemini 3.8 Flash)")
+                            }
+                        }
+
+                        if (state.suggestedSteps.isNotEmpty()) {
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                state.suggestedSteps.forEach { suggestion ->
+                                    AssistChip(
+                                        onClick = { viewModel.applySuggestedStep(suggestion) },
+                                        label = { Text(suggestion) }
+                                    )
+                                }
+                            }
                         }
 
                         OutlinedTextField(

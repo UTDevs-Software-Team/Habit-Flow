@@ -6,12 +6,14 @@
 package com.utdevs.habitflow.di
 
 import android.content.Context
+import com.utdevs.habitflow.data.ai.GeminiMicroGoalGenerator
 import com.utdevs.habitflow.data.dopamine.AssetDopamineCatalogSource
 import com.utdevs.habitflow.data.feedback.HapticAndToneController
 import com.utdevs.habitflow.data.plan.AssetPlanDataSource
 import com.utdevs.habitflow.data.reminder.GoalReminderScheduler
 import com.utdevs.habitflow.data.repository.FirebaseAuthRepository
 import com.utdevs.habitflow.data.repository.FirestoreGoalsRepository
+import com.utdevs.habitflow.data.shield.FocusShieldController
 import com.utdevs.habitflow.data.theme.ThemePreferences
 import com.utdevs.habitflow.domain.dopamine.ComputeDayRewardUseCase
 import com.utdevs.habitflow.domain.dopamine.EvaluateAchievementsUseCase
@@ -20,6 +22,7 @@ import com.utdevs.habitflow.domain.dopamine.ValidateActiveGoalsLimitUseCase
 import com.utdevs.habitflow.domain.repository.AuthRepository
 import com.utdevs.habitflow.domain.repository.DopamineCatalogSource
 import com.utdevs.habitflow.domain.repository.GoalsRepository
+import com.utdevs.habitflow.domain.repository.MicroGoalGenerator
 import com.utdevs.habitflow.domain.repository.PlanDataSource
 import com.utdevs.habitflow.domain.usecase.ApplyVerdictResolutionUseCase
 import com.utdevs.habitflow.domain.usecase.ComputeDayBlocksUseCase
@@ -59,6 +62,14 @@ class AppContainer(context: Context) {
 
     val reminderScheduler: GoalReminderScheduler by lazy {
         GoalReminderScheduler(appContext)
+    }
+
+    val focusShieldController: FocusShieldController by lazy {
+        FocusShieldController(appContext)
+    }
+
+    val microGoalGenerator: MicroGoalGenerator by lazy {
+        GeminiMicroGoalGenerator(appContext)
     }
 
     val timerStateHolder: TimerStateHolder by lazy {

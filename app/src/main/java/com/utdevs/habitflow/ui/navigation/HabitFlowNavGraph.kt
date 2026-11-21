@@ -252,6 +252,8 @@ fun HabitFlowNavGraph(container: AppContainer) {
                         goalsRepository = container.goalsRepository,
                         planDataSource = container.planDataSource,
                         dopamineCatalogSource = container.dopamineCatalogSource,
+                        microGoalGenerator = container.microGoalGenerator,
+                        focusShieldController = container.focusShieldController,
                         computeDayBlocksUseCase = container.computeDayBlocksUseCase,
                         evaluatePunctualityUseCase = container.evaluatePunctualityUseCase,
                         computeDayRewardUseCase = container.computeDayRewardUseCase,

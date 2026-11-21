@@ -74,6 +74,9 @@ class FocusTimerService : Service() {
     private val stateHolder: TimerStateHolder by lazy {
         (application as HabitFlowApp).container.timerStateHolder
     }
+    private val focusShield: com.utdevs.habitflow.data.shield.FocusShieldController by lazy {
+        (application as HabitFlowApp).container.focusShieldController
+    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -124,6 +127,7 @@ class FocusTimerService : Service() {
             TimerNotificationHelper.NOTIFICATION_ID,
             TimerNotificationHelper.buildOngoingNotification(this, stateHolder.state.value)
         )
+        applyShieldForBlock(blocks.first().type)
         startTicker(firstMillis)
     }
 
@@ -131,6 +135,7 @@ class FocusTimerService : Service() {
         val current = stateHolder.state.value
         if (current.status != TimerStatus.RUNNING) return
         tickerJob?.cancel()
+        focusShield.restorePreviousDnd()
         val remaining = (targetElapsedRealtime - SystemClock.elapsedRealtime()).coerceAtLeast(0L)
         stateHolder.update {
             it.copy(status = TimerStatus.PAUSED, remainingMillis = remaining)
@@ -142,6 +147,7 @@ class FocusTimerService : Service() {
         val current = stateHolder.state.value
         if (current.status != TimerStatus.PAUSED) return
         stateHolder.update { it.copy(status = TimerStatus.RUNNING) }
+        current.currentBlock?.let { applyShieldForBlock(it.type) }
         startTicker(current.remainingMillis)
     }
 
@@ -157,6 +163,7 @@ class FocusTimerService : Service() {
 
     private fun handleStop() {
         tickerJob?.cancel()
+        focusShield.restorePreviousDnd()
         stateHolder.reset()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
@@ -186,7 +193,8 @@ class FocusTimerService : Service() {
         val nextIndex = current.currentBlockIndex + 1
 
         if (nextIndex < current.blocks.size) {
-            val nextBlockMillis = current.blocks[nextIndex].durationMinutes * 60_000L
+            val nextBlock = current.blocks[nextIndex]
+            val nextBlockMillis = nextBlock.durationMinutes * 60_000L
             stateHolder.update {
                 it.copy(
                     currentBlockIndex = nextIndex,
@@ -194,8 +202,10 @@ class FocusTimerService : Service() {
                     totalBlockMillis = nextBlockMillis
                 )
             }
+            applyShieldForBlock(nextBlock.type)
             startTicker(nextBlockMillis)
         } else {
+            focusShield.restorePreviousDnd()
             stateHolder.update {
                 it.copy(
                     status = TimerStatus.FINISHED,
@@ -205,6 +215,14 @@ class FocusTimerService : Service() {
             }
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
+        }
+    }
+
+    private fun applyShieldForBlock(type: BlockType) {
+        if (type == BlockType.FOCUS) {
+            focusShield.activateFocusDnd()
+        } else {
+            focusShield.restorePreviousDnd()
         }
     }
 
@@ -237,6 +255,7 @@ class FocusTimerService : Service() {
 
     override fun onDestroy() {
         tickerJob?.cancel()
+        focusShield.restorePreviousDnd()
         serviceScope.cancel()
         super.onDestroy()
     }

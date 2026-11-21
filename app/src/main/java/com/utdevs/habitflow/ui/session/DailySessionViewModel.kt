@@ -2,8 +2,8 @@
  * Codigo anadido por Felipe Denis
  *
  * ViewModel Black Box para DailySessionScreen por goalId.
- * Integra FocusTimerService, haptica corta por puntos XP, vibracion larga + confeti al subir nivel,
- * y ahorro atomico de recompensas RPE/Fenix en GoalsRepository.
+ * Integra FocusTimerService, FocusShieldController (DND + Anti-Fuga),
+ * Gemini 3.8 Flash (MicroGoalGenerator), haptica y recompensas RPE/Fenix.
  */
 package com.utdevs.habitflow.ui.session
 
@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.utdevs.habitflow.data.feedback.HapticAndToneController
+import com.utdevs.habitflow.data.shield.FocusShieldController
 import com.utdevs.habitflow.data.theme.ThemePreferences
 import com.utdevs.habitflow.domain.dopamine.ComputeDayRewardUseCase
 import com.utdevs.habitflow.domain.model.BlockType
@@ -25,6 +26,7 @@ import com.utdevs.habitflow.domain.model.SpecialEvent
 import com.utdevs.habitflow.domain.model.UserProfile
 import com.utdevs.habitflow.domain.repository.DopamineCatalogSource
 import com.utdevs.habitflow.domain.repository.GoalsRepository
+import com.utdevs.habitflow.domain.repository.MicroGoalGenerator
 import com.utdevs.habitflow.domain.repository.PlanDataSource
 import com.utdevs.habitflow.domain.usecase.ComputeDayBlocksUseCase
 import com.utdevs.habitflow.domain.usecase.EvaluatePunctualityUseCase
@@ -56,6 +58,10 @@ data class DailySessionUiState(
     val showConfetti: Boolean = false,
     val victoryOutcome: DayRewardOutcome? = null,
     val liveXpMessage: String? = null,
+    val hasDndPermission: Boolean = false,
+    val focusExitCount: Int = 0,
+    val suggestedSteps: List<String> = emptyList(),
+    val isGeneratingSteps: Boolean = false,
     val isSaving: Boolean = false,
     val errorMessage: String? = null
 ) {
@@ -82,6 +88,8 @@ class DailySessionViewModel(
     private val goalsRepository: GoalsRepository,
     private val planDataSource: PlanDataSource,
     private val dopamineCatalogSource: DopamineCatalogSource,
+    private val microGoalGenerator: MicroGoalGenerator,
+    private val focusShieldController: FocusShieldController,
     private val computeDayBlocksUseCase: ComputeDayBlocksUseCase,
     private val evaluatePunctualityUseCase: EvaluatePunctualityUseCase,
     private val computeDayRewardUseCase: ComputeDayRewardUseCase,
@@ -97,7 +105,8 @@ class DailySessionViewModel(
     private val _uiState = MutableStateFlow(
         DailySessionUiState(
             daySpec = daySpec,
-            resolvedBlocks = computeDayBlocksUseCase(daySpec, durationFactor = 1.0)
+            resolvedBlocks = computeDayBlocksUseCase(daySpec, durationFactor = 1.0),
+            hasDndPermission = focusShieldController.hasDndAccess()
         )
     )
     val uiState: StateFlow<DailySessionUiState> = _uiState.asStateFlow()
@@ -139,7 +148,65 @@ class DailySessionViewModel(
         val currentFormat = _uiState.value.selectedFormatId
         val blocks = computeDayBlocksUseCase(daySpec, goal.sprint.durationFactor, currentFormat)
         _uiState.update {
-            it.copy(goal = goal, profile = profile, resolvedBlocks = blocks)
+            it.copy(
+                goal = goal,
+                profile = profile,
+                resolvedBlocks = blocks,
+                hasDndPermission = focusShieldController.hasDndAccess()
+            )
+        }
+    }
+
+    fun refreshDndPermission() {
+        _uiState.update { it.copy(hasDndPermission = focusShieldController.hasDndAccess()) }
+    }
+
+    fun openDndSettings(context: Context) {
+        context.startActivity(focusShieldController.buildDndSettingsIntent())
+    }
+
+    fun onAppLeftDuringFocus() {
+        val tState = timerStateHolder.state.value
+        if (tState.sessionTag == sessionTag &&
+            tState.status == TimerStatus.RUNNING &&
+            tState.currentBlock?.type == BlockType.FOCUS
+        ) {
+            _uiState.update { state ->
+                val nextCount = state.focusExitCount + 1
+                state.copy(
+                    focusExitCount = nextCount,
+                    liveXpMessage = "Detectamos salida del bloque ($nextCount). Respira y vuelve sin culpa."
+                )
+            }
+        }
+    }
+
+    fun requestAiMicroSteps(forTomorrow: Boolean) {
+        val current = _uiState.value
+        if (current.isGeneratingSteps) return
+        val targetDay = if (forTomorrow) (dayNumber + 1).coerceAtMost(21) else dayNumber
+        val targetMins = planDataSource.getDaySpec(targetDay).focusMinutes
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isGeneratingSteps = true) }
+            microGoalGenerator.suggestMicroSteps(
+                anchorTask = current.goal.sprint.anchorTask.ifBlank { current.goal.title },
+                focusMinutes = targetMins,
+                previousClosure = current.goal.sprint.nextMicroTask,
+                dayNumber = targetDay
+            ).onSuccess { steps ->
+                _uiState.update { it.copy(isGeneratingSteps = false, suggestedSteps = steps) }
+            }.onFailure {
+                _uiState.update { it.copy(isGeneratingSteps = false) }
+            }
+        }
+    }
+
+    fun applySuggestedStep(step: String) {
+        if (daySpec.specialEvent is SpecialEvent.TextInput && _uiState.value.specialInputValue.isBlank()) {
+            _uiState.update { it.copy(specialInputValue = step) }
+        } else {
+            _uiState.update { it.copy(closureTask = step) }
         }
     }
 
@@ -324,6 +391,8 @@ class DailySessionViewModel(
         private val goalsRepository: GoalsRepository,
         private val planDataSource: PlanDataSource,
         private val dopamineCatalogSource: DopamineCatalogSource,
+        private val microGoalGenerator: MicroGoalGenerator,
+        private val focusShieldController: FocusShieldController,
         private val computeDayBlocksUseCase: ComputeDayBlocksUseCase,
         private val evaluatePunctualityUseCase: EvaluatePunctualityUseCase,
         private val computeDayRewardUseCase: ComputeDayRewardUseCase,
@@ -340,6 +409,8 @@ class DailySessionViewModel(
                 goalsRepository = goalsRepository,
                 planDataSource = planDataSource,
                 dopamineCatalogSource = dopamineCatalogSource,
+                microGoalGenerator = microGoalGenerator,
+                focusShieldController = focusShieldController,
                 computeDayBlocksUseCase = computeDayBlocksUseCase,
                 evaluatePunctualityUseCase = evaluatePunctualityUseCase,
                 computeDayRewardUseCase = computeDayRewardUseCase,

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 // Codigo anadido por Felipe Denis
 // Configuracion del modulo :app (100% Kotlin, Jetpack Compose, Firebase habit-flow-fb095).
 
@@ -7,6 +9,12 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
 }
+
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+val geminiApiKey = localProps.getProperty("GEMINI_API_KEY", "")
 
 android {
     namespace = "com.utdevs.habitflow"
@@ -19,6 +27,7 @@ android {
         versionCode = 1
         versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
     }
 
     buildTypes {
