@@ -125,12 +125,24 @@
 <body class="h-full text-slate-800 antialiased selection:bg-brand-100 selection:text-brand-900">
   <div id="root" class="min-h-full flex flex-col"></div>
 
-  <!-- Parametros Base Centralizados (faciles de editar en exposicion) -->
-  <script src="src/data/baseParams.js"></script>
-
   <!-- Main Application Script (Babel) -->
   <script type="text/babel">
     const { useState, useEffect, useRef, useMemo } = React;
+
+    // =========================================================================
+    // PARAMETROS BASE CENTRALIZADOS (Edita aqui tiempos, metas o tolerancias)
+    // =========================================================================
+    const HABITFLOW_BASE_PARAMS = {
+      TOTAL_DAYS: 21,
+      DEFAULT_HABIT: 'Vencer la procrastinacion e iniciar sesiones de estudio efectivas',
+      DEFAULT_MAGNITUDE: 'mediano', // 'chico' | 'mediano' | 'grande'
+      PUNCTUALITY_WINDOW_MINUTES: 15,
+      DURATIONS: {
+        chico:   [2, 3, 3, 3, 3, 4, 2,  5, 3,  5,  5,  5,  8, 3,  5,  4, 3, 10,  5, 3, 3],
+        mediano: [5, 5, 5, 5, 5, 7, 3,  8, 5, 10,  8, 10, 18, 5, 10,  5, 5, 23, 10, 5, 5],
+        grande:  [5, 7, 8, 6, 8, 10, 5, 12, 8, 15, 12, 15, 25, 7, 15, 10, 8, 30, 15, 8, 8]
+      }
+    };
 
     // --- Web Audio Synthetic Chime Player ---
     const playChime = () => {
@@ -191,7 +203,7 @@
     };
 
     // --- MAGNITUDE SPECIFICATIONS & DEFINITION OF THE 3 CALENDARS ---
-    const BASE_PARAMS = window.HABITFLOW_BASE_PARAMS || {};
+    const BASE_PARAMS = HABITFLOW_BASE_PARAMS;
     const HABIT_MAGNITUDES = BASE_PARAMS.MAGNITUDES || {
       chico: {
         id: 'chico',
@@ -864,16 +876,6 @@
         document.documentElement.classList.toggle('dark', darkMode);
         try { localStorage.setItem('habitflow_dark_mode', String(darkMode)); } catch (e) {}
       }, [darkMode]);
-
-      useEffect(() => {
-        fetch('./src/data/micro_pasos.csv')
-          .then((res) => (res.ok ? res.text() : Promise.reject()))
-          .then((txt) => {
-            const parsed = parseMicroPasosCsv(txt);
-            if (parsed.length > 0) setCsvCatalog(parsed);
-          })
-          .catch(() => {});
-      }, []);
 
       // Persist state to localStorage
       useEffect(() => {
