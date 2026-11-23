@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>HabitFlow - Suite de Pruebas Automatizadas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .pass { color: #16a34a; font-weight: bold; }
+    .fail { color: #dc2626; font-weight: bold; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 p-8 font-sans">
+  <div class="max-w-4xl mx-auto space-y-6">
+    <div class="border-b border-slate-700 pb-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-black text-emerald-400">🌱 HabitFlow Test Suite</h1>
+        <p class="text-xs text-slate-400 mt-1">Verificación automática de los requerimientos y recomendaciones del documento oficial</p>
+      </div>
+      <button onclick="runAllTests()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-xl font-bold text-xs">
+        Reejecutar pruebas
+      </button>
+    </div>
+
+    <!-- Resultados -->
+    <div id="test-summary" class="p-4 rounded-2xl bg-slate-800 border border-slate-700 font-bold text-sm">
+      Ejecutando pruebas...
+    </div>
+
+    <div id="test-results" class="space-y-3"></div>
+  </div>
+
+  <!-- Cargar scripts del proyecto -->
+  <script src="js/data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/plant.js"></script>
+
+  <script>
+    const resultsContainer = document.getElementById('test-results');
+    const summaryContainer = document.getElementById('test-summary');
+    let passed = 0;
+    let failed = 0;
+
+    function assert(condition, testName, details = '') {
+      const card = document.createElement('div');
+      card.className = "p-3.5 rounded-xl bg-slate-800/80 border " + (condition ? "border-emerald-500/40" : "border-rose-500/40");
+      
+      if (condition) {
+        passed++;
+        card.innerHTML = `<div class="flex items-center justify-between"><span class="pass">✓ PASS:</span> <span class="font-bold text-slate-200">${testName}</span> <span class="text-xs text-emerald-400">Correcto</span></div>${details ? `<p class="text-xs text-slate-400 mt-1">${details}</p>` : ''}`;
+      } else {
+        failed++;
+        card.innerHTML = `<div class="flex items-center justify-between"><span class="fail">✗ FAIL:</span> <span class="font-bold text-rose-300">${testName}</span> <span class="text-xs text-rose-400">Falló</span></div>${details ? `<p class="text-xs text-rose-300 mt-1">${details}</p>` : ''}`;
+      }
+      resultsContainer.appendChild(card);
+    }
+
+    function runAllTests() {
+      resultsContainer.innerHTML = '';
+      passed = 0;
+      failed = 0;
+
+      // PRUEBA CLAVE 1 RECOMENDADA POR EL EQUIPO:
+      // "Que al seleccionar procrastinación aparezcan sus siete actividades."
+      const proc = HABITFLOW_DATA.methods.find(m => m.id === 'procrastinacion');
+      assert(
+        proc && proc.days && proc.days.length === 7,
+        "Recomendación 1: Procrastinación tiene sus 7 actividades definidas",
+        `Días encontrados: ${proc ? proc.days.length : 0}. Día 1: "${proc.days[0].title}", Día 7: "${proc.days[6].title}".`
+      );
+
+      // Verificar que los 6 métodos tienen exactamente 7 actividades
+      const allMethodsHave7Days = HABITFLOW_DATA.methods.length === 6 &&
+        HABITFLOW_DATA.methods.every(m => m.days.length === 7);
+      assert(
+        allMethodsHave7Days,
+        "Todos los 6 métodos oficiales cuentan con exactamente 7 días",
+        `Métodos verificados: ${HABITFLOW_DATA.methods.map(m => m.title).join(', ')}`
+      );
+
+      // PRUEBA CLAVE 2 RECOMENDADA POR EL EQUIPO:
+      // "Que al marcar una actividad cambie el porcentaje de progreso y la planta."
+      HabitStorage.resetAll();
+      HabitStorage.setAgeRange('16-18', 'Tester');
+      HabitStorage.selectHabit('procrastinacion');
+
+      // Inicial: 0 completadas -> 0% -> Semilla (Etapa 1)
+      let plant0 = VirtualPlant.calculatePlantState(0, 0);
+      assert(
+        plant0.effectivePercent === 0 && plant0.stageNumber === 1 && plant0.stageData.name === 'Semilla',
+        "Etapa Inicial (0 días completados): 0% y Planta en etapa Semilla",
+        `Porcentaje: ${plant0.effectivePercent}%, Etapa: ${plant0.stageData.name}`
+      );
+
+      // Marcar Día 1
+      HabitStorage.toggleDayCompletion(1);
+      let stateAfterD1 = HabitStorage.load();
+      let plant1 = VirtualPlant.calculatePlantState(stateAfterD1.habit.completedDays.length, stateAfterD1.habit.maxProgressPercentage);
+      assert(
+        stateAfterD1.habit.completedDays.length === 1 && Math.round(plant1.effectivePercent) === 14,
+        "Recomendación 2: Al marcar Día 1 cambia el porcentaje a (1/7)*100 = 14.3%",
+        `Porcentaje obtenido: ${plant1.effectivePercent}%`
+      );
+
+      // Marcar Día 2 (Avanzar a Brote >= 20%)
+      HabitStorage.setCurrentDay(2);
+      HabitStorage.toggleDayCompletion(2);
+      let stateAfterD2 = HabitStorage.load();
+      let plant2 = VirtualPlant.calculatePlantState(stateAfterD2.habit.completedDays.length, stateAfterD2.habit.maxProgressPercentage);
+      assert(
+        plant2.stageNumber === 2 && plant2.stageData.name === 'Brote' && Math.round(plant2.effectivePercent) === 29,
+        "Planta evoluciona a etapa 2: 'Brote' al alcanzar >= 20% (2 actividades)",
+        `Porcentaje: ${plant2.effectivePercent}%, Etapa: ${plant2.stageData.name}`
+      );
+
+      // Marcar hasta 6 actividades (>= 80% -> Planta Florecida)
+      HabitStorage.setCurrentDay(6);
+      [3, 4, 5, 6].forEach(d => HabitStorage.toggleDayCompletion(d));
+      let stateAfterD6 = HabitStorage.load();
+      let plant6 = VirtualPlant.calculatePlantState(stateAfterD6.habit.completedDays.length, stateAfterD6.habit.maxProgressPercentage);
+      assert(
+        plant6.stageNumber === 5 && plant6.stageData.name === 'Planta florecida' && Math.round(plant6.effectivePercent) === 86,
+        "Planta florece (Etapa 5) al alcanzar >= 80% (6 o 7 actividades)",
+        `Porcentaje: ${plant6.effectivePercent}%, Etapa: ${plant6.stageData.name}`
+      );
+
+      // Regla de retención de la planta: la planta NO pierde su crecimiento si deja un día pendiente
+      HabitStorage.toggleDayCompletion(6); // desmarcar día 6
+      let stateAfterUncheck = HabitStorage.load();
+      let plantRetained = VirtualPlant.calculatePlantState(stateAfterUncheck.habit.completedDays.length, stateAfterUncheck.habit.maxProgressPercentage);
+      assert(
+        plantRetained.stageNumber === 5 && plantRetained.effectivePercent >= 85,
+        "Regla oficial: La planta no pierde su crecimiento si se desmarca un día",
+        `Crecimiento retenido: ${plantRetained.effectivePercent}%, Etapa mantenida: ${plantRetained.stageData.name}`
+      );
+
+      // PRUEBA CLAVE 3 RECOMENDADA POR EL EQUIPO:
+      // "Que al recargar la página se conserve el avance."
+      // Simulamos recarga leyendo de nuevo desde LocalStorage
+      const reloadedState = HabitStorage.load();
+      assert(
+        reloadedState.user.name === 'Tester' &&
+        reloadedState.user.ageRange === '16-18' &&
+        reloadedState.habit.id === 'procrastinacion' &&
+        reloadedState.habit.completedDays.length === 5,
+        "Recomendación 3: Persistencia en LocalStorage tras recarga",
+        `Hábito: ${reloadedState.habit.id}, Edad: ${reloadedState.user.ageRange}, Días completados guardados: [${reloadedState.habit.completedDays.join(', ')}]`
+      );
+
+      // PRUEBA DE REGLA DEL CALENDARIO:
+      // "No permitir marcar actividades futuras antes de realizarlas"
+      HabitStorage.setCurrentDay(3); // Hoy es Día 3
+      const tryFuture = HabitStorage.toggleDayCompletion(5); // Intentar marcar Día 5
+      assert(
+        tryFuture.success === false && tryFuture.reason === 'future_day_locked',
+        "Regla del Calendario: Bloqueo de actividades en días futuros",
+        `Mensaje recibido: "${tryFuture.message}"`
+      );
+
+      // PRUEBA DE ADAPTACIÓN POR RANGOS DE EDAD (13-15, 16-18, 19-20)
+      const testDay = proc.days[0];
+      const hasAllAges = testDay.ageAdaptations['13-15'] && testDay.ageAdaptations['16-18'] && testDay.ageAdaptations['19-20'];
+      assert(
+        hasAllAges,
+        "Adaptación por 3 rangos de edad en actividades",
+        `Adaptaciones presentes para: 13-15, 16-18 y 19-20 años`
+      );
+
+      // Resumen final
+      summaryContainer.innerHTML = `
+        <div class="flex items-center justify-between">
+          <span>Pruebas completadas: ${passed + failed}</span>
+          <span>
+            <span class="text-emerald-400 font-bold">${passed} Pasadas</span> • 
+            <span class="${failed ? 'text-rose-400' : 'text-slate-400'} font-bold">${failed} Fallidas</span>
+          </span>
+        </div>
+      `;
+    }
+
+    // Ejecutar al cargar
+    window.addEventListener('DOMContentLoaded', runAllTests);
+  </script>
+</body>
+</html>

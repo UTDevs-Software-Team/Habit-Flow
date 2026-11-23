@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HabitFlow - Plataforma de Mejora de Hábitos de 7 Días</title>
+  
+  <!-- Meta tags informativos -->
+  <meta name="description" content="HabitFlow ayuda a adolescentes y adultos jóvenes de 13 a 20 años a desarrollar mejores hábitos mediante métodos estructurados de 7 días y motivación con planta virtual.">
+  <meta name="author" content="HabitFlow Team">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            emerald: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              300: '#6ee7b7',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+              950: '#022c22',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Canvas Confetti para celebración visual -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <!-- Estilos personalizados -->
+  <link rel="stylesheet" href="css/styles.css">
+  
+  <!-- Favicon SVG con brote -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%200%20100%20100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>">
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 flex flex-col min-h-screen transition-colors duration-200">
+
+  <!-- ========================================== -->
+  <!-- BARRA DE NAVEGACIÓN SUPERIOR (HEADER)      -->
+  <!-- ========================================== -->
+  <header class="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-slate-800 glass-card">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+      
+      <!-- Logo y Título -->
+      <a href="javascript:void(0)" onclick="HabitApp.switchTab('home')" class="flex items-center gap-2.5 group">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-500/25 group-hover:scale-105 transition-transform">
+          <span class="text-xl">🌱</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-lg font-black tracking-tight text-slate-900 dark:text-white">
+              Habit<span class="text-emerald-600 dark:text-emerald-400">Flow</span>
+            </h1>
+            <span class="text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
+              7 Días
+            </span>
+          </div>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 hidden sm:block">13 a 20 años • Métodos Estructurados</p>
+        </div>
+      </a>
+
+      <!-- Pestañas de Navegación Principal -->
+      <nav class="flex items-center gap-1 bg-slate-100 dark:bg-slate-900/80 p-1 rounded-2xl border border-slate-200/80 dark:border-slate-800 text-xs font-semibold overflow-x-auto max-w-[55%] sm:max-w-none">
+        <button type="button" data-nav="dashboard" onclick="HabitApp.switchTab('dashboard')"
+          class="nav-tab-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all">
+          <span>📌</span> <span class="hidden sm:inline">Mi Reto</span>
+        </button>
+        <button type="button" data-nav="plant" onclick="HabitApp.switchTab('plant')"
+          class="nav-tab-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all">
+          <span>🪴</span> <span class="hidden sm:inline">Planta</span>
+        </button>
+        <button type="button" data-nav="methods" onclick="HabitApp.switchTab('methods')"
+          class="nav-tab-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all">
+          <span>📚</span> <span class="hidden sm:inline">Los 6 Métodos</span>
+        </button>
+        <button type="button" data-nav="evaluation" onclick="HabitApp.switchTab('evaluation')"
+          class="nav-tab-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all">
+          <span>📊</span> <span class="hidden sm:inline">Evaluación</span>
+        </button>
+      </nav>
+
+      <!-- Botones de Utilidad (Tema y Ayuda) -->
+      <div class="flex items-center gap-1.5">
+        <button type="button" onclick="HabitApp.showAboutModal()"
+          class="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm" title="¿Cómo funciona HabitFlow?">
+          ❓
+        </button>
+        <button type="button" onclick="HabitApp.toggleTheme()"
+          class="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm" title="Cambiar tema claro / oscuro">
+          <span id="theme-toggle-icon">🌙</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- CONTENEDOR PRINCIPAL REACTIVO              -->
+  <!-- ========================================== -->
+  <main id="app-main-container" class="flex-1 pb-12">
+    <!-- El contenido se inyecta dinámicamente mediante HabitApp.renderApp() -->
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODAL: EVALUACIÓN FINAL DE 7 DÍAS          -->
+  <!-- ========================================== -->
+  <div id="evaluation-modal-backdrop" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl overflow-y-auto max-h-[90vh] fade-in" id="evaluation-modal-content">
+      <!-- Se inyecta dinámicamente -->
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- PIE DE PÁGINA (FOOTER)                     -->
+  <!-- ========================================== -->
+  <footer class="border-t border-slate-200/80 dark:border-slate-800 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
+    <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span>🌱</span>
+        <span class="font-bold text-slate-700 dark:text-slate-300">HabitFlow</span>
+        <span>— Métodos estructurados de 7 días para adolescentes y jóvenes de 13 a 20 años.</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-emerald-600 dark:text-emerald-400 font-semibold">● Servidor local activo en http://localhost:8080/</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts de la Aplicación -->
+  <script src="js/data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/plant.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

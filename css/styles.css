@@ -1,0 +1,211 @@
+/* ==========================================================================
+   HABITFLOW - styles.css
+   Estilos visuales modernos, animaciones botánicas, temporizador y transiciones
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --emerald-primary: #10b981;
+  --emerald-dark: #059669;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Glassmorphism */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.dark .glass-card {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(51, 65, 85, 0.6);
+}
+
+/* Animación sutil de la planta (balanceo suave) */
+@keyframes plantSway {
+  0%, 100% {
+    transform: rotate(0deg);
+    transform-origin: 150px 200px;
+  }
+  50% {
+    transform: rotate(1.8deg);
+    transform-origin: 150px 200px;
+  }
+}
+
+.plant-gentle-sway {
+  animation: plantSway 4.5s ease-in-out infinite;
+}
+
+/* Rebote alegre al regar */
+@keyframes waterBounce {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.06) translateY(-4px); }
+  65% { transform: scale(0.97) translateY(2px); }
+  100% { transform: scale(1); }
+}
+
+.plant-water-bounce {
+  animation: waterBounce 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Gotas de agua que caen hacia la maceta */
+@keyframes dropletFall {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.6);
+  }
+  30% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(120px) scale(1.2);
+  }
+}
+
+.water-droplet-anim {
+  position: absolute;
+  width: 10px;
+  height: 14px;
+  background: radial-gradient(circle at 35% 35%, #ffffff 10%, #38bdf8 60%, #0284c7 100%);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  pointer-events: none;
+  animation: dropletFall 0.8s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+  z-index: 25;
+}
+
+/* Pulso suave */
+@keyframes pulseSoft {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.85; }
+}
+
+.pulse-soft {
+  animation: pulseSoft 2.5s ease-in-out infinite;
+}
+
+/* Pulso de flor */
+@keyframes bloomPulse {
+  0%, 100% { transform: translate(150px, 60px) scale(1); }
+  50% { transform: translate(150px, 60px) scale(1.07); }
+}
+
+.bloom-pulse {
+  animation: bloomPulse 3s ease-in-out infinite;
+}
+
+/* Vuelo de mariposas en la etapa 5 */
+@keyframes butterfly1 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(15px, -12px) rotate(10deg); }
+  50% { transform: translate(25px, 8px) rotate(-8deg); }
+  75% { transform: translate(10px, -6px) rotate(5deg); }
+}
+
+.butterfly-flight-1 {
+  animation: butterfly1 4s ease-in-out infinite;
+}
+
+@keyframes butterfly2 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  30% { transform: translate(-18px, -15px) rotate(-12deg); }
+  60% { transform: translate(-8px, 12px) rotate(8deg); }
+  85% { transform: translate(-22px, -4px) rotate(-6deg); }
+}
+
+.butterfly-flight-2 {
+  animation: butterfly2 5s ease-in-out infinite;
+}
+
+/* Rayos de sol tenues */
+@keyframes sunbeam {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.sunbeam-anim {
+  animation: sunbeam 3s ease-in-out infinite;
+}
+
+/* Estilo para casillas de verificación animadas */
+.custom-checkbox-wrapper input[type="checkbox"]:checked + div {
+  background-color: #10b981;
+  border-color: #10b981;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+.custom-checkbox-wrapper input[type="checkbox"]:checked + div svg {
+  stroke-dashoffset: 0;
+}
+
+/* Tarjetas de días en calendario */
+.day-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.day-card:hover {
+  transform: translateY(-2px);
+}
+
+.day-card.active-day {
+  ring-offset-2: 2px;
+}
+
+/* Animación del temporizador */
+.timer-display {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Personalización de scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Transición suave para cambio de tabs y modales */
+.fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
