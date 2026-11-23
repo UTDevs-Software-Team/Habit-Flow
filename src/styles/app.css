@@ -1,0 +1,64 @@
+/**
+ * HabitFlow Web - Hoja de Estilos Base y Modo Oscuro
+ * Modulo Black Box de estilos globales y overrides para la clase `html.dark`.
+ */
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: #F8FAFC;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark mode overrides (activado con clase .dark en <html>) */
+html.dark body {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+html.dark header {
+  background-color: rgba(15, 23, 42, 0.92) !important;
+  border-color: #334155 !important;
+}
+html.dark .bg-white {
+  background-color: #1e293b !important;
+}
+html.dark .bg-slate-50 {
+  background-color: #0f172a !important;
+}
+html.dark .bg-slate-100 {
+  background-color: #334155 !important;
+}
+html.dark .border-slate-200,
+html.dark .border-slate-200\/80,
+html.dark .border-slate-100 {
+  border-color: #334155 !important;
+}
+html.dark .text-slate-900,
+html.dark .text-slate-800 {
+  color: #f1f5f9 !important;
+}
+html.dark .text-slate-700,
+html.dark .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+html.dark .text-slate-500 {
+  color: #94a3b8 !important;
+}
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background-color: #0f172a !important;
+  color: #f1f5f9 !important;
+  border-color: #475569 !important;
+}
