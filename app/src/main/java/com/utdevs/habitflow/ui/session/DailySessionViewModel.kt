@@ -61,6 +61,7 @@ data class DailySessionUiState(
     val liveXpMessage: String? = null,
     val hasDndPermission: Boolean = false,
     val focusExitCount: Int = 0,
+    val conceptBrief: String = "",
     val suggestedSteps: List<String> = emptyList(),
     val stepsFromAi: Boolean = false,
     val stepsModelUsed: String = "",
@@ -216,6 +217,7 @@ class DailySessionViewModel(
                 _uiState.update {
                     it.copy(
                         isGeneratingSteps = false,
+                        conceptBrief = suggestion.conceptBrief,
                         suggestedSteps = suggestion.steps,
                         stepsFromAi = suggestion.fromAi,
                         stepsModelUsed = suggestion.modelUsed

@@ -275,6 +275,13 @@ fun DailySessionScreen(
                                 )
                             }
                         } else {
+                            if (state.conceptBrief.isNotBlank()) {
+                                Text(
+                                    text = "Concepto clave (desde cero): ${state.conceptBrief}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = colors.primaryAction
+                                )
+                            }
                             state.suggestedSteps.forEachIndexed { idx, step ->
                                 Text(
                                     text = "${idx + 1}. $step",

@@ -82,4 +82,5 @@ dependencies {
     implementation(libs.googleid)
 
     testImplementation(libs.junit4)
+    testImplementation("org.json:json:20240303")
 }
