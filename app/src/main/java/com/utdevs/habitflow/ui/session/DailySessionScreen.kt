@@ -48,6 +48,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -209,6 +210,82 @@ fun DailySessionScreen(
                     }
                 }
 
+                // Plan de Micro-Pasos Auto-Generado con Contexto de la Meta
+                Card(
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = colors.surfaceCard),
+                    border = BorderStroke(1.dp, colors.cardBorder)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(
+                                    Icons.Default.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = colors.primaryAction,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(
+                                    text = "Micro-pasos para tu meta",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = colors.textPrimary
+                                )
+                            }
+                            TextButton(
+                                onClick = { viewModel.requestAiMicroSteps(forTomorrow = false) },
+                                enabled = !state.isGeneratingSteps
+                            ) {
+                                Text("Regenerar")
+                            }
+                        }
+
+                        val sourceBadge = when {
+                            state.isGeneratingSteps -> "Generando con Gemini para '${state.goal.title.ifBlank { state.goal.sprint.anchorTask }}'..."
+                            state.stepsFromAi -> "IA activa (${state.stepsModelUsed}) - Contexto: ${state.goal.title.ifBlank { state.goal.sprint.anchorTask }}"
+                            state.suggestedSteps.isNotEmpty() -> "Respaldo offline - Contexto: ${state.goal.title.ifBlank { state.goal.sprint.anchorTask }}"
+                            else -> "Preparando ruta de arranque..."
+                        }
+                        Text(
+                            text = sourceBadge,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = colors.textSecondary
+                        )
+
+                        if (state.isGeneratingSteps && state.suggestedSteps.isEmpty()) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
+                                Text(
+                                    "Desglosando pasos accionables...",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = colors.textSecondary
+                                )
+                            }
+                        } else {
+                            state.suggestedSteps.forEachIndexed { idx, step ->
+                                Text(
+                                    text = "${idx + 1}. $step",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = colors.textPrimary
+                                )
+                            }
+                        }
+                    }
+                }
+
                 state.daySpec.specialEvent?.let { special ->
                     SpecialEventSection(
                         event = special,
@@ -354,11 +431,11 @@ fun DailySessionScreen(
                             if (state.isGeneratingSteps) {
                                 CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Generando con Gemini 3.8 Flash...")
+                                Text("Generando micro-pasos...")
                             } else {
                                 Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Sugerir micro-pasos (Gemini 3.8 Flash)")
+                                Text("Sugerir cierre para manana (IA)")
                             }
                         }
 
