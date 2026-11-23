@@ -127,16 +127,36 @@
 
   <!-- Main Application Script (Babel) -->
   <script type="text/babel">
+    /**
+     * =========================================================================
+     * HABITFLOW WEB - SPA MONOBLOQUE (ARCHIVO UNICO AUTOCONTENIDO)
+     * =========================================================================
+     * MAPA DE SECCIONES (usa Ctrl+F para ir directo en exposicion):
+     *   1. HABITFLOW_BASE_PARAMS    -> Parametros base (dias, duraciones, tolerancia)
+     *   2. playChime                -> Sintetizador Web Audio API al finalizar timer
+     *   3. Icons                    -> Iconos SVG en linea
+     *   4. HABIT_MAGNITUDES         -> Configuracion de 3 magnitudes (Chico/Mediano/Grande)
+     *   5. EMBEDDED_MICRO_PASOS_CSV -> Catalogo CSV simple de pasos (6 metas)
+     *   6. getDayConfig             -> Selector de duracion y secuencias por dia/magnitud
+     *   7. VirtualPlantVisual       -> Planta virtual SVG parametrica (5 fases)
+     *   8. NativeTimer              -> Temporizador nativo React (simple y multi-bloque)
+     *   9. HabitFlowApp             -> Estado global, localStorage, modo oscuro y rutas
+     *  10. DashboardView            -> Vista 1: Calendario 21 dias + Planta + Proximo paso
+     *  11. DailyActivityView        -> Vista 2: Checklist diario + Guia CSV + Temporizador
+     *  12. MetricsView              -> Vista 3: Metricas objetivas + Exportar JSON
+     * =========================================================================
+     */
     const { useState, useEffect, useRef, useMemo } = React;
 
     // =========================================================================
-    // PARAMETROS BASE CENTRALIZADOS (Edita aqui tiempos, metas o tolerancias)
+    // [SECCION 1] PARAMETROS BASE CENTRALIZADOS (Edita aqui tiempos o reglas)
     // =========================================================================
     const HABITFLOW_BASE_PARAMS = {
       TOTAL_DAYS: 21,
       DEFAULT_HABIT: 'Vencer la procrastinacion e iniciar sesiones de estudio efectivas',
       DEFAULT_MAGNITUDE: 'mediano', // 'chico' | 'mediano' | 'grande'
       PUNCTUALITY_WINDOW_MINUTES: 15,
+      // Arreglos de 21 numeros: indice 0 = Dia 1 ... indice 20 = Dia 21 (en minutos)
       DURATIONS: {
         chico:   [2, 3, 3, 3, 3, 4, 2,  5, 3,  5,  5,  5,  8, 3,  5,  4, 3, 10,  5, 3, 3],
         mediano: [5, 5, 5, 5, 5, 7, 3,  8, 5, 10,  8, 10, 18, 5, 10,  5, 5, 23, 10, 5, 5],
@@ -253,7 +273,7 @@
       { id: 3, name: 'Etapa 3: Consolidación y Autonomía', days: 'Días 15 a 21', color: 'emerald' },
     ];
 
-    // Catalogo CSV de respaldo por si se abre con file:// sin servidor local
+    // [SECCION 5] Catalogo CSV embebido (auto-contenido para funcionar tambien en file://)
     const EMBEDDED_MICRO_PASOS_CSV = [
       'id,meta,paso_1,paso_2,paso_3,paso_4',
       'bajar_de_peso,Bajar de peso y ejercicio,Llenar un vaso de agua y ponerte tenis deportivos,Hacer 5 minutos de calentamiento o caminata suave,Completar 1 serie corta de sentadillas o abdominales,Anotar que comiste hoy sin juzgarte',
@@ -277,7 +297,7 @@
       }).filter((item) => item.id && item.meta);
     };
 
-    // Helper to get tailored Day Configuration conditioned by Magnitude
+    // [SECCION 6] Selector de configuracion diaria calibrada por magnitud (Chico/Mediano/Grande)
     const getDayConfig = (dayNum, magnitude = 'mediano') => {
       // 1. DURATION MAPPINGS FOR THE 3 CALENDARS
       const durations = BASE_PARAMS.DURATIONS || {
