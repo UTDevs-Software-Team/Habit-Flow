@@ -122,7 +122,7 @@
     }
   </style>
 </head>
-<body class="h-full text-slate-800 antialiased selection:bg-brand-100 selection:text-brand-900">
+<body class="h-full text-slate-800 antialiased overflow-x-hidden selection:bg-brand-100 selection:text-brand-900">
   <div id="root" class="min-h-full flex flex-col"></div>
 
   <!-- Main Application Script (Babel) -->
@@ -1405,8 +1405,8 @@
 
           {/* TOP BAR / NAVIGATION */}
           <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-2xs">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center justify-between h-16 sm:h-20">
+            <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+              <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 py-2.5 sm:py-0 sm:h-20">
                 {/* Brand & Habit Title */}
                 <div className="flex items-center gap-3">
                   <div 
@@ -1432,11 +1432,11 @@
                 </div>
 
                 {/* Navigation Views */}
-                <nav className="flex items-center gap-1 sm:gap-2">
+                <nav className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-1 sm:gap-2 overflow-x-auto pb-0.5 sm:pb-0">
                   <button
                     type="button"
                     onClick={() => navigateTo('dashboard')}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                    className={`shrink-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
                       appState.currentView === 'dashboard'
                         ? 'bg-slate-900 text-white shadow-xs'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -1449,15 +1449,16 @@
                   <button
                     type="button"
                     onClick={() => navigateTo('activity', appState.currentViewingDay)}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                    className={`shrink-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
                       appState.currentView === 'activity'
                         ? 'bg-brand-600 text-white shadow-xs'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                     }`}
                   >
                     <Icons.Target />
-                    Actividad Diaria
-                    <span className="ml-1 text-[11px] px-1.5 py-0.2 rounded-full bg-white/20 font-mono">
+                    <span>Actividad</span>
+                    <span className="hidden sm:inline">Diaria</span>
+                    <span className="ml-0.5 sm:ml-1 text-[11px] px-1.5 py-0.2 rounded-full bg-white/20 font-mono">
                       D{appState.currentViewingDay}
                     </span>
                   </button>
@@ -1465,20 +1466,20 @@
                   <button
                     type="button"
                     onClick={() => navigateTo('metrics')}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                    className={`shrink-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
                       appState.currentView === 'metrics'
                         ? 'bg-growth-600 text-white shadow-xs'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                     }`}
                   >
                     <Icons.BarChart />
-                    Progreso y Métricas
+                    <span className="hidden sm:inline">Progreso y</span> Métricas
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setDarkMode((prev) => !prev)}
-                    className="px-2.5 py-2 rounded-xl text-xs font-semibold border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all"
+                    className="shrink-0 px-2.5 py-1.5 sm:py-2 rounded-xl text-xs font-semibold border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all"
                     title="Alternar modo claro / oscuro"
                   >
                     {darkMode ? 'Claro' : 'Oscuro'}
